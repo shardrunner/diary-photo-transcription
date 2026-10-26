@@ -1,4 +1,4 @@
-PROMPT_VERSION = 9
+PROMPT_VERSION = 10
 
 EXTRACTION_PROMPT = """Transkribiere ausschließlich den sichtbaren Inhalt dieses
 Tagebuchfotos in die vorgegebene Struktur. Das Foto zeigt eine Doppelseite: links
@@ -39,8 +39,11 @@ Eine ausgelassene Morgenroutine ist normal; dann fehlen viele Felder der linken 
 
 2. Symbolzeile der rechten Seite (Tagesscores)
 Wenn eine Scorezeile vorhanden ist, melde ALLE 17 Positionen in aufsteigender
-Reihenfolge. Fehlt die Scorezeile komplett (z.B. bei reinem Fließtext), setze
-scores=[] (Deviation note im layout angeben). Erfinde keine leeren Positionen.
+Reihenfolge. Sind nur einzelne Symbole gezeichnet (z.B. nur Kreispfeil und Smiley
+oben rechts), ist die Zeile vorhanden: melde ebenfalls alle 17 Positionen, nicht
+gezeichnete als state="empty" (Deviation note im layout angeben). Fehlt die
+Scorezeile komplett (z.B. bei reinem Fließtext), setze scores=[] (Deviation note
+im layout angeben). Erfinde keine leeren Positionen.
 
 - position ist die Stelle in der Zeile von links, genau 1 bis 17.
 - ACHTUNG BEI DER VERTIKALEN AUSRICHTUNG:

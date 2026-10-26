@@ -45,7 +45,8 @@ def test_changed_prompt_changes_run_identity(monkeypatch: pytest.MonkeyPatch) ->
 
 
 def test_absent_score_row_prompt() -> None:
-    assert PROMPT_VERSION > 7
+    assert PROMPT_VERSION >= 10
+    assert "nur einzelne Symbole" in EXTRACTION_PROMPT
     assert "scores=[]" in EXTRACTION_PROMPT
     assert 'state="empty" und rawValue=null' not in EXTRACTION_PROMPT
     assert "Habittrackerzahl als ganze Zahl" in EXTRACTION_PROMPT

@@ -95,9 +95,11 @@ auf, indem es nachfolgende Werte vorzieht, und verschiebt damit die gesamte
 Zeile. Ein solcher Fall ist real aufgetreten und in [`API-PoC`](api-poc.md)
 dokumentiert.
 
-Prompt v9: Ist die Zeile sichtbar, müssen alle 17 Positionen gemeldet werden;
-fehlt sie vollständig, gilt `scores=[]` mit Layout-Abweichungsnotiz. Keine 17
-leeren Positionen erfinden.
+Prompt v10: Ist die Zeile sichtbar, müssen alle 17 Positionen gemeldet werden.
+Sind nur einzelne Symbole gezeichnet (z.B. nur Kreispfeil und Smiley), gilt die
+Zeile als vorhanden; nicht gezeichnete Positionen sind `empty`. Fehlt sie
+vollständig, gilt `scores=[]` mit Layout-Abweichungsnotiz. Keine 17 leeren
+Positionen erfinden.
 Werte liegen zwischen 0 und 6; einzige Ausnahme ist Position 16, ein Zähler in
 Bruchschreibweise. Dezimalwerte kommen nie vor.
 

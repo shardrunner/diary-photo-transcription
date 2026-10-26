@@ -28,7 +28,7 @@ false flags, at +0.020 USD/page.
 
 ## Current state
 
-- Branch `main`, 9 commits ahead of `origin/main` (not pushed). From `35f0673`
+- Branch `main`; the commits after `caa7b52` may not be pushed yet. From `35f0673`
   to `d1efe77`:
   - SDK version removed from run identity
   - CLI errors print without a traceback

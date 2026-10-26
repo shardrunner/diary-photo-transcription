@@ -113,13 +113,6 @@ def test_unusable_result_fails_after_its_evidence_is_saved(
 def test_model_selects_claude_cli_provider(monkeypatch: pytest.MonkeyPatch) -> None:
     config = ProjectConfig(model="claude-sonnet-5-5")
     assert config.provider == "claude-cli"
-    monkeypatch.setattr(
-        claude_cli.subprocess,
-        "run",
-        lambda *a, **k: (_ for _ in ()).throw(
-            AssertionError("version lookup must not run a request")
-        ),
-    )
     monkeypatch.setattr(claude_cli.shutil, "which", lambda name: None)
     with pytest.raises(ValueError, match="claude"):
         claude_cli.create_client()

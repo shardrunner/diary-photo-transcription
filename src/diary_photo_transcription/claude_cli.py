@@ -47,10 +47,6 @@ def create_client() -> str:
     return path
 
 
-def estimate_standard_cost_usd(usage: TokenUsage) -> Decimal:
-    raise ValueError("The claude CLI reports its own cost; no estimate is available")
-
-
 def request_observation(
     client: str,
     *,

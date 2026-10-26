@@ -111,12 +111,29 @@ winner and refuses to overwrite differing vault notes without `--force`.
   database, GUI or provider framework. See the [data model](docs/ai/data-model.md)
   and the [paper contract](docs/ai/papierlegende.md).
 
-**Model evaluation.** Gemini 3.8 Flash, GPT-6.1 Terra and Claude Sonnet 5.5 were
-benchmarked through the identical pipeline across thinking levels and image
-resolutions on accuracy, confident date errors, reliability, cost and latency
-([results and decision](docs/ai/model-evaluation.md)). Short version: Gemini is the
-most faithful transcriber, Terra the most reliable date reader at a third of the
-cost, Sonnet the fastest.
+## Model evaluation
+
+Three current multimodal models were benchmarked through the identical
+pipeline (same prompt, schema and validation) on hand-verified gold pages and a
+15-page date set, across thinking levels and image resolutions (2026-10-26).
+CER is the character error rate of the transcribed text:
+
+| Model (setting) | Text CER ↓ | Dates correct ↑ | Confident date errors ↓ | USD/page ↓ | Median latency ↓ |
+|---|---|---|---|---|---|
+| Gemini 3.8 Flash (medium) | **2.2%** | 11/15 | 3 | 0.063 | 140 s |
+| GPT-6.1 Terra (medium, original detail) | 3.4% | **14/15** | **1** | 0.029 | 69 s |
+| GPT-6.1 Terra (medium) | 4.1% | **14/15** | **1** | **0.020** | 59 s |
+| Claude Sonnet 5.5 (medium, via Claude Code) | 2.5% | 12/14 | **1** | 0.067 | **23 s** |
+| **Gemini + Terra cross-check** (simulated on the benchmark runs) | **2.2%** | 3 of 4 Gemini date errors flagged, 0 false flags | | 0.083 | |
+
+Gemini transcribes most faithfully, while GPT-6.1 Terra reads dates best at a
+third of the cost. Replaying the benchmark runs shows that a Terra cross-check
+would turn Gemini's confident date errors into review items; it is the next
+planned pipeline step. Higher thinking levels did not improve accuracy:
+Gemini at `high` mostly hit the 300 s timeout. The sample is small (2 gold
+pages × 3 runs).
+Method, all 8 configurations, failure analysis and learnings are in the
+[model evaluation](docs/ai/model-evaluation.md).
 
 Evaluation compares all entries in source order. Text CER sums per-entry edit
 distances over total reference characters; listed inserted passages are

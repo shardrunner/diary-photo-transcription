@@ -13,11 +13,11 @@ often the model is confidently wrong, reliability, cost and latency.
 
 **Result:** No configuration wins on every axis. Gemini 3.8 Flash (medium) is
 the most faithful transcriber. GPT-6.1 Terra is the most reliable at reading
-dates and costs about a third as much. Gemini's main weakness, misread years,
-can be caught with a free deterministic check, while weaker text fidelity
-cannot be fixed afterwards. The recommendation is therefore **Gemini 3.8 Flash at
-medium thinking, plus a year-plausibility review flag**. Terra medium with
-`original` image detail is the strongest alternative.
+dates and costs about a third as much. Running both and flagging the pages
+where they disagree caught 3 of Gemini's 4 date errors with no false alarms.
+The decision is therefore **Gemini 3.8 Flash (medium) as the primary
+transcriber and GPT-6.1 Terra as a cross-check**, plus a free year-plausibility
+check.
 
 ## Setup
 
@@ -100,16 +100,62 @@ the "Failed" column.
    about 0.3. More flags mean more human review. On this data the extra flags
    did not come with better text.
 
+## Cross-check simulation
+
+These are offline results from the runs above (date set, 15 pages, Gemini medium
+as the primary model). A flag means the page goes to human review; no date is
+corrected automatically.
+
+| Strategy | Gemini date errors flagged | False flags | Added cost/page |
+|---|---|---|---|
+| Year outside the corpus year (deterministic) | 2/4 | 0 | 0 |
+| Disagreement with Terra medium | 3/4 | 0 | +0.020 USD |
+| Disagreement with Terra medium, `original` | 3/4 | 0 | +0.029 USD |
+| Disagreement with Sonnet medium | 3/4 | 1 | +0.067 USD |
+
+- **Run the cross-check on every page.** Querying the second model only for
+  year outliers would miss the merged two-day page, which only a disagreement
+  reveals.
+- **The remaining miss** is a date that both models read identically and
+  wrongly. No model ensemble catches that. Only a sequence check against
+  neighboring pages or a human does.
+
 ## Decision
 
-- **Default:** Gemini 3.8 Flash at medium thinking, set explicitly. Without an
-  explicit level, the provider default varied from 0.7k to 18k thinking tokens
-  between runs.
-- **Mitigation:** add a deterministic review flag for page years outside the
-  configured corpus year. That turns Gemini's confident date errors into
-  visible review items at no API cost.
-- **Revisit Terra** (medium, `original`) if the gold set grows and its text
-  gap stays under about 1 percentage point, or if cost becomes relevant.
+- **Primary model:** Gemini 3.8 Flash at medium thinking, set explicitly.
+  Without an explicit level, the provider default varied from 0.7k to 18k
+  thinking tokens between runs.
+- **Cross-check:** GPT-6.1 Terra (medium) extracts every page as well. Date
+  disagreements become review issues. The combined cost is about 0.083
+  USD/page, 1.3× Gemini alone.
+- **Deterministic checks:** flag page years outside the corpus year and dates
+  that break the photo sequence.
+- **Revisit Terra as the primary model** if the gold set grows and its text gap
+  stays under about 1 percentage point.
+
+## Learnings
+
+- **Valid JSON is not a correct transcription.** The validator rejected 7
+  malformed responses, but the most consequential errors (wrong years marked
+  `certain`) were schema-valid and passed every structural check. Only verified ground truth and
+  cross-checks revealed them.
+- **Silent configuration drift:** with no explicit thinking level, Gemini's
+  thinking tokens dropped from 17.8k to 0.7k between two runs of the same page,
+  and the output dropped text passages. Settings that affect output must be
+  pinned.
+- **Gold data needs auditing too.** The benchmark found two errors in the gold
+  data: a contradictory score row, and an ambiguous rule for pages where only
+  some score symbols are drawn. Fixing them changed a score metric from 0% to
+  100%.
+- **Run identity:** including the SDK version in the run fingerprint made an SDK
+  upgrade look like 33 new paid jobs. Provenance belongs in metadata, not in the
+  cache key.
+- **One schema across three providers:** OpenAI strict mode needs every property
+  required and no defaults. A schema transform kept a single Pydantic source of
+  truth, and the domain validator rejected invalid values from every provider
+  alike.
+- **Timeouts:** Gemini at `high` needed more than 300 s per attempt on most pages.
+  Timed-out requests leave no response to inspect and may still be billed.
 
 ## Limitations
 

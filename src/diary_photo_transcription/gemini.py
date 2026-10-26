@@ -1,24 +1,20 @@
 from __future__ import annotations
 
 import base64
-import hashlib
 import os
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from io import BytesIO
-from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from PIL import Image, ImageOps, UnidentifiedImageError
 
 from diary_photo_transcription.config import MediaResolution
 from diary_photo_transcription.prompts import EXTRACTION_PROMPT
+from diary_photo_transcription.provider import ModelResult, PhotoSnapshot, TokenUsage
 from diary_photo_transcription.schemas import model_response_json_schema
 
 # The SDK retries 408/409/429/5xx with capped exponential backoff; `attempts`
@@ -37,53 +33,6 @@ _MILLION = Decimal(1_000_000)
 
 InteractionContent = dict[str, object]
 ResponseFormat = dict[str, object]
-
-
-@dataclass(frozen=True, slots=True)
-class GeminiUsage:
-    input_tokens: int
-    output_tokens: int
-    thinking_tokens: int
-    total_tokens: int
-
-
-@dataclass(frozen=True, slots=True)
-class GeminiResult:
-    raw_text: str
-    usage: GeminiUsage
-    interaction_id: str | None
-    request_duration_seconds: float
-
-
-@dataclass(frozen=True, slots=True)
-class PhotoSnapshot:
-    """Immutable source bytes and identity; prepare upload pixels only on demand."""
-
-    path: Path
-    sha256: str
-    source_bytes: bytes = field(repr=False)
-
-    @classmethod
-    def capture(cls, path: Path) -> PhotoSnapshot:
-        path = path.resolve(strict=True)
-        source = path.read_bytes()
-        return cls(path, hashlib.sha256(source).hexdigest(), source)
-
-    @property
-    def upload_bytes(self) -> bytes:
-        """EXIF-orient and re-encode the captured bytes without any source metadata."""
-        try:
-            with Image.open(BytesIO(self.source_bytes)) as image:
-                if image.format != "JPEG":
-                    raise ValueError("selected photo is not a JPEG")
-                image.load()
-                oriented = ImageOps.exif_transpose(image).convert("RGB")
-                clean = Image.frombytes("RGB", oriented.size, oriented.tobytes())
-                buffer = BytesIO()
-                clean.save(buffer, format="JPEG", quality=95)
-        except (UnidentifiedImageError, OSError) as error:
-            raise ValueError("selected photo is not a valid JPEG") from error
-        return buffer.getvalue()
 
 
 def build_interaction_input(
@@ -139,7 +88,7 @@ def _reject_debug() -> None:
         raise ValueError("GOOGLE_GENAI_DEBUG must be unset or empty for private requests")
 
 
-def estimate_standard_cost_usd(usage: GeminiUsage) -> Decimal:
+def estimate_standard_cost_usd(usage: TokenUsage) -> Decimal:
     """Estimate Flash Standard cost at the current UTC date, including thinking."""
     output_tokens = usage.output_tokens + usage.thinking_tokens
     introductory_cost = (
@@ -173,7 +122,7 @@ def request_observation(
     thinking_level: str | None = None,
     media_resolution: MediaResolution = "high",
     on_interaction: Callable[[dict[str, Any]], object] | None = None,
-) -> GeminiResult:
+) -> ModelResult:
     """Create one stateless structured interaction and return its text plus usage.
 
     ``on_interaction`` receives the full provider response before status, text
@@ -217,14 +166,14 @@ def request_observation(
     metadata = getattr(interaction, "usage", None)
     if metadata is None:
         raise ValueError("Gemini returned no usage metadata")
-    usage = GeminiUsage(
+    usage = TokenUsage(
         input_tokens=_required_token_count(metadata, "total_input_tokens"),
         output_tokens=_required_token_count(metadata, "total_output_tokens"),
         thinking_tokens=_required_token_count(metadata, "total_thought_tokens"),
         total_tokens=_required_token_count(metadata, "total_tokens"),
     )
     interaction_id = getattr(interaction, "id", None)
-    return GeminiResult(
+    return ModelResult(
         raw_text=output_text,
         usage=usage,
         interaction_id=interaction_id

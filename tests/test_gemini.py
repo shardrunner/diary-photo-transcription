@@ -16,13 +16,12 @@ from PIL import Image
 
 from diary_photo_transcription import gemini
 from diary_photo_transcription.gemini import (
-    GeminiUsage,
-    PhotoSnapshot,
     build_interaction_input,
     build_response_format,
     estimate_standard_cost_usd,
     request_observation,
 )
+from diary_photo_transcription.provider import PhotoSnapshot, TokenUsage
 
 _USAGE = Usage(
     total_input_tokens=100, total_output_tokens=20, total_thought_tokens=30, total_tokens=150
@@ -134,7 +133,7 @@ def test_sdk_transport_preserves_request_contract_and_retries(tmp_path: Path) ->
         assert image.size == (8, 8)
     assert request.extensions["timeout"]["read"] == 300.0
     assert result.raw_text == '{"schemaVersion":2}'
-    assert result.usage == GeminiUsage(100, 20, 30, 150)
+    assert result.usage == TokenUsage(100, 20, 30, 150)
 
 
 def test_interaction_input_is_text_first_inline_jpeg(tmp_path: Path) -> None:
@@ -158,7 +157,7 @@ def test_request_is_stateless_structured_and_maps_usage(tmp_path: Path) -> None:
     assert sent["input"][0]["text"] == "PROMPT"
     assert result.raw_text == '{"schemaVersion":2}'
     assert result.interaction_id == "interaction-123"
-    assert result.usage == GeminiUsage(100, 20, 30, 150)
+    assert result.usage == TokenUsage(100, 20, 30, 150)
 
 
 def test_default_thinking_level_is_not_sent(tmp_path: Path) -> None:
@@ -211,13 +210,13 @@ def test_standard_cost_uses_current_utc_rates_and_includes_thinking(
             return datetime.fromisoformat(timestamp)
 
     monkeypatch.setattr(gemini, "datetime", Clock)
-    usage = GeminiUsage(1_000_000, 100_000, 100_000, 1_200_000)
+    usage = TokenUsage(1_000_000, 100_000, 100_000, 1_200_000)
     assert estimate_standard_cost_usd(usage) == Decimal(expected)
 
 
 def test_snapshot_survives_source_replacement_and_strips_metadata(tmp_path: Path) -> None:
     path = jpeg(tmp_path / "photo.jpg")
-    snapshot = gemini.PhotoSnapshot.capture(path)
+    snapshot = PhotoSnapshot.capture(path)
     path.write_bytes(b"not an image")
     payload = cast(str, gemini.build_interaction_input(snapshot)[1]["data"])
     with Image.open(BytesIO(base64.b64decode(payload))) as image:
@@ -233,9 +232,7 @@ def test_all_jpegs_strip_metadata(tmp_path: Path, orientation: int | None) -> No
     if orientation is not None:
         exif[274] = orientation
     Image.new("RGB", (12, 8)).save(path, exif=exif)
-    payload = cast(
-        str, gemini.build_interaction_input(gemini.PhotoSnapshot.capture(path))[1]["data"]
-    )
+    payload = cast(str, gemini.build_interaction_input(PhotoSnapshot.capture(path))[1]["data"])
     with Image.open(BytesIO(base64.b64decode(payload))) as image:
         assert not image.getexif()
 
@@ -244,7 +241,7 @@ def test_invalid_image_fails_locally(tmp_path: Path) -> None:
     path = tmp_path / "bad.jpg"
     path.write_bytes(b"bad")
     with pytest.raises(ValueError, match="JPEG"):
-        gemini.build_interaction_input(gemini.PhotoSnapshot.capture(path))
+        gemini.build_interaction_input(PhotoSnapshot.capture(path))
 
 
 @pytest.mark.parametrize("debug", ["1", "0"])

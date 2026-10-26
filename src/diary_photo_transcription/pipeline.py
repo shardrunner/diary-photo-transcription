@@ -13,14 +13,11 @@ from uuid import uuid4
 
 from diary_photo_transcription import gemini
 from diary_photo_transcription.config import ProjectConfig, load_project_config
-from diary_photo_transcription.gemini import (
-    GeminiResult,
-    PhotoSnapshot,
-    estimate_standard_cost_usd,
-)
+from diary_photo_transcription.gemini import estimate_standard_cost_usd
 from diary_photo_transcription.normalize import review_targets
 from diary_photo_transcription.prompts import PROMPT_VERSION, refinement_prompt
 from diary_photo_transcription.provenance import config_fingerprint, extraction_run_id, sha256
+from diary_photo_transcription.provider import ModelResult, PhotoSnapshot
 from diary_photo_transcription.runs import (
     active_dir,
     keep_failed,
@@ -55,7 +52,7 @@ def discover_source_photos(source_dir: Path) -> list[Path]:
     )
 
 
-def _usage(response: GeminiResult, config: ProjectConfig) -> dict[str, Any]:
+def _usage(response: ModelResult, config: ProjectConfig) -> dict[str, Any]:
     """Content-free request metadata."""
     return {
         "interactionId": response.interaction_id,

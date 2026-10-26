@@ -10,7 +10,7 @@ import pytest
 from PIL import Image
 
 from diary_photo_transcription import gemini
-from diary_photo_transcription.gemini import GeminiResult, GeminiUsage
+from diary_photo_transcription.provider import ModelResult, TokenUsage
 from diary_photo_transcription.schemas import (
     CalendarDay,
     DayEntry,
@@ -161,15 +161,15 @@ class FakeGemini:
     def clean_raw() -> str:
         return _clean_raw()
 
-    def request(self, client: object, *, model: str, prompt: str, **kwargs: Any) -> GeminiResult:
+    def request(self, client: object, *, model: str, prompt: str, **kwargs: Any) -> ModelResult:
         self.prompts.append(prompt)
         if on_interaction := kwargs.get("on_interaction"):
             on_interaction({"interaction": {"output_text": self.raw_text}})
         if self.error is not None:
             raise self.error
-        return GeminiResult(
+        return ModelResult(
             raw_text=self.raw_text,
-            usage=GeminiUsage(100, 20, 30, 150),
+            usage=TokenUsage(100, 20, 30, 150),
             interaction_id="interaction",
             request_duration_seconds=0.1,
         )

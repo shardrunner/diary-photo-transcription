@@ -40,8 +40,12 @@ def load_project_config(path: Path | None = None, **kwargs: Any) -> ProjectConfi
 
 ThinkingLevel = Literal["low", "medium", "high"]
 MediaResolution = Literal["high", "ultra_high"]
-Provider = Literal["gemini", "openai"]
-MODELS: dict[str, Provider] = {"gemini-3.8-flash": "gemini", "gpt-6.1-terra": "openai"}
+Provider = Literal["gemini", "openai", "claude-cli"]
+MODELS: dict[str, Provider] = {
+    "gemini-3.8-flash": "gemini",
+    "gpt-6.1-terra": "openai",
+    "claude-sonnet-5-5": "claude-cli",
+}
 DEFAULT_MODEL = "gemini-3.8-flash"
 
 
@@ -62,6 +66,10 @@ class ProjectConfig:
 
     @property
     def sdk_version(self) -> str:
+        if self.provider == "claude-cli":
+            from diary_photo_transcription.claude_cli import cli_version
+
+            return cli_version()
         return version("openai" if self.provider == "openai" else "google-genai")
 
     @property

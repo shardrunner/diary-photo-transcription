@@ -11,7 +11,7 @@ from threading import Event
 from typing import Any
 from uuid import uuid4
 
-from diary_photo_transcription import gemini, openai_api
+from diary_photo_transcription import claude_cli, gemini, openai_api
 from diary_photo_transcription.config import ProjectConfig, load_project_config
 from diary_photo_transcription.normalize import review_targets
 from diary_photo_transcription.prompts import PROMPT_VERSION, refinement_prompt
@@ -64,14 +64,17 @@ def _usage(response: ModelResult, config: ProjectConfig) -> dict[str, Any]:
         "thinkingTokens": response.usage.thinking_tokens,
         "totalTokens": response.usage.total_tokens,
         "estimatedStandardCostUsd": format(
-            _adapter(config).estimate_standard_cost_usd(response.usage), "f"
+            response.cost_usd
+            if response.cost_usd is not None
+            else _adapter(config).estimate_standard_cost_usd(response.usage),
+            "f",
         ),
     }
 
 
 def _adapter(config: ProjectConfig) -> Any:
     """The provider module; looked up at call time so tests can patch it."""
-    return openai_api if config.provider == "openai" else gemini
+    return {"gemini": gemini, "openai": openai_api, "claude-cli": claude_cli}[config.provider]
 
 
 def _display_path(photo: Path) -> str:

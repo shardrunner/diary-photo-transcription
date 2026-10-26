@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
+from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
 
@@ -26,6 +27,8 @@ class ModelResult:
     usage: TokenUsage
     interaction_id: str | None
     request_duration_seconds: float
+    # Provider-reported cost; when absent the adapter estimates it from usage.
+    cost_usd: Decimal | None = None
 
 
 @dataclass(frozen=True, slots=True)

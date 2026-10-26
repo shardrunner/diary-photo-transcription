@@ -151,10 +151,10 @@ def test_standard_cost_includes_reasoning() -> None:
 def test_client_requires_openai_key(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(ValueError, match="OPENAI_API_KEY"):
         openai_api.create_client()
-    monkeypatch.setenv("OPENAI_API_KEY", "synthetic-key")
+    monkeypatch.setenv("OPENAI_API_KEY", "placeholder")
     monkeypatch.setattr(openai_api, "OpenAI", lambda **kwargs: kwargs)
     client: Any = openai_api.create_client()
-    assert client["api_key"] == "synthetic-key"
+    assert client["api_key"] == "placeholder"
     assert client["timeout"] == openai_api.REQUEST_TIMEOUT_SECONDS
     assert client["max_retries"] == openai_api.SDK_RETRIES
 

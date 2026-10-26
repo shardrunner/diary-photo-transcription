@@ -14,7 +14,11 @@ def sha256(path: Path) -> str:
 
 
 def config_fingerprint(config: ProjectConfig) -> str:
-    """Hash every setting that can change the model output; the vault target cannot."""
+    """Hash every setting that can change the model output.
+
+    The vault target and the SDK version are excluded: an SDK upgrade must not
+    resubmit unchanged photos. The SDK version stays in run provenance.
+    """
     payload = {
         "effectivePrompt": config.effective_prompt,
         "localConfig": config.local.model_dump(exclude={"vault_dir"}),
@@ -22,7 +26,6 @@ def config_fingerprint(config: ProjectConfig) -> str:
         "model": config.model,
         "promptVersion": PROMPT_VERSION,
         "schemaVersion": SCHEMA_VERSION,
-        "sdkVersion": config.sdk_version,
         "thinkingLevel": config.thinking_level,
     }
     serialized = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)

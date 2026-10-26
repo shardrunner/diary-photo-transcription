@@ -64,10 +64,10 @@ and failed requests can incur charges without reported usage. Recheck
 [provider pricing](https://ai.google.dev/gemini-api/docs/pricing) when updating the
 model or rates.
 
-**Run identity.** `config_fingerprint()` includes the SDK version. An SDK upgrade
-therefore changes the run ID for an unchanged photo and can cause a later `batch`
-to submit it again. Limit the first paid batch after an upgrade with `--photos`;
-do not silently remove provenance fields or automatically select competing runs.
+**Run identity.** `config_fingerprint()` excludes the SDK version, so an SDK
+upgrade does not resubmit unchanged photos; `run.json` still records the version.
+To compare an upgrade, re-run selected photos with `--photos ... --force`; do not
+automatically select competing runs.
 
 **Storage semantics.** Requests are synchronous and stateless. Background
 execution would require a separate review of provider retention, polling,

@@ -72,9 +72,9 @@ requests already sent finish and are saved.
 
 A run is identified by photo content hash + configuration fingerprint, so an
 unchanged photo with the same configuration is skipped (`--force` makes a new run).
-The fingerprint includes the Gemini SDK version: after an SDK upgrade, `batch`
-can submit previously extracted photos again. Use `--photos` to limit the first
-paid batch after upgrading to the intended inputs. Each run is
+The Gemini SDK version is recorded in `run.json` but not part of the
+fingerprint, so an SDK upgrade does not resubmit extracted photos; use `--force`
+to compare an upgrade on selected `--photos`. Each run is
 built in a hidden staging directory and renamed into `private/output/RUN/` only
 when complete:
 

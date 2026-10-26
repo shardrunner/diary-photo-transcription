@@ -14,7 +14,6 @@ from diary_photo_transcription.provenance import (
     "changed",
     [
         ProjectConfig(model="different-model"),
-        ProjectConfig(sdk_version="synthetic-sdk"),
         ProjectConfig(thinking_level="low"),
         ProjectConfig(media_resolution="ultra_high"),
     ],
@@ -28,8 +27,9 @@ def test_output_relevant_settings_change_the_run_identity(changed: ProjectConfig
     assert extraction_run_id("b" * 64, base) != extraction_run_id(photo, base)
 
 
-def test_fingerprint_ignores_only_vault_destination() -> None:
+def test_fingerprint_ignores_vault_destination_and_sdk_version() -> None:
     base = config_fingerprint(ProjectConfig())
+    assert config_fingerprint(ProjectConfig(sdk_version="synthetic-sdk")) == base
     assert config_fingerprint(ProjectConfig(local=LocalConfig(vault_dir="elsewhere"))) == base
     assert config_fingerprint(ProjectConfig(local=LocalConfig(context="vocabulary"))) != base
     assert config_fingerprint(ProjectConfig(local=LocalConfig(default_corpus_year=2025))) != base

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from collections.abc import Callable, Sequence
 
 from diary_photo_transcription.cli.batch import run_batch
@@ -25,4 +26,10 @@ COMMANDS: dict[str, Callable[[argparse.Namespace], int]] = {
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    return COMMANDS[args.command](args)
+    try:
+        return COMMANDS[args.command](args)
+    except ValueError as error:
+        # Expected user/data errors (ambiguous date, unknown run, ...) are raised
+        # as ValueError; print the message instead of a traceback.
+        print(f"error: {error}", file=sys.stderr)
+        return 1

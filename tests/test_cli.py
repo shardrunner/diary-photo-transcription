@@ -122,17 +122,20 @@ def test_export_protects_differing_vault_notes(workspace, fake_gemini, capsys):
     assert "0 written, 1 unchanged" in capsys.readouterr().out
 
 
-def test_export_without_vault_fails(workspace, fake_gemini):
+def test_export_without_vault_fails(workspace, fake_gemini, capsys):
     main(["batch", "--photos", "private/source/a.jpg"])
-    with pytest.raises(ValueError, match="vault_dir"):
-        main(["export"])
+    capsys.readouterr()
+    assert main(["export"]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("error: ") and "vault_dir" in err
+    assert "Traceback" not in err
 
 
-def test_ambiguous_date_is_resolved_by_select(workspace, fake_gemini):
+def test_ambiguous_date_is_resolved_by_select(workspace, fake_gemini, capsys):
     main(["batch"])
     vault = workspace / "vault"
-    with pytest.raises(ValueError, match="Ambiguous"):
-        main(["export", "--vault-dir", str(vault)])
+    assert main(["export", "--vault-dir", str(vault)]) == 1
+    assert "error: Ambiguous date 2040-01-02" in capsys.readouterr().err
     assert not vault.exists()
     chosen = discover_runs(workspace / "private/output")[1]
     assert main(["select", "--date", "2040-01-02", "--run", chosen.name]) == 0

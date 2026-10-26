@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from PIL import Image
 
-from diary_photo_transcription import gemini
+from diary_photo_transcription import gemini, openai_api
 from diary_photo_transcription.provider import ModelResult, TokenUsage
 from diary_photo_transcription.schemas import (
     CalendarDay,
@@ -35,6 +35,7 @@ def isolate_local_config(monkeypatch: pytest.MonkeyPatch) -> None:
         "GOOGLE_CLOUD_PROJECT",
         "GOOGLE_GENAI_USE_VERTEXAI",
         "GOOGLE_CLOUD_LOCATION",
+        "OPENAI_API_KEY",
     ):
         monkeypatch.delenv(key, raising=False)
 
@@ -180,6 +181,15 @@ def fake_gemini(monkeypatch: pytest.MonkeyPatch) -> FakeGemini:
     fake = FakeGemini()
     monkeypatch.setattr(gemini, "create_client", lambda: object())
     monkeypatch.setattr(gemini, "request_observation", fake.request)
+    return fake
+
+
+@pytest.fixture
+def fake_openai(monkeypatch: pytest.MonkeyPatch) -> FakeGemini:
+    """The same offline stand-in, patched into the OpenAI adapter."""
+    fake = FakeGemini()
+    monkeypatch.setattr(openai_api, "create_client", lambda: object())
+    monkeypatch.setattr(openai_api, "request_observation", fake.request)
     return fake
 
 

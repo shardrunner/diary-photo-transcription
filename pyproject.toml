@@ -26,6 +26,7 @@ classifiers = [
 ]
 dependencies = [
   "google-genai==2.31.0",
+  "openai==3.39.0",
   "pillow>=13,<14",
   "pydantic>=2.12,<3",
   "python-dotenv>=1,<2",

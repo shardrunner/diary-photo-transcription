@@ -29,7 +29,9 @@ def _describe(result: ExtractionResult) -> str:
 
 def run_batch(args: argparse.Namespace) -> int:
     config = load_project_config(
-        thinking_level=args.thinking_level, media_resolution=args.media_resolution
+        model=args.model,
+        thinking_level=args.thinking_level,
+        media_resolution=args.media_resolution,
     )
     output_dir = args.output_dir.resolve()
     if args.photos is not None:

@@ -3,13 +3,16 @@
 import json
 import subprocess
 import sys
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
 
 from diary_photo_transcription.cli import main
 from diary_photo_transcription.cli.parser import build_parser
-from diary_photo_transcription.runs import discover_runs, pending_revisions
+from diary_photo_transcription.openai_api import estimate_standard_cost_usd
+from diary_photo_transcription.provider import TokenUsage
+from diary_photo_transcription.runs import discover_runs, pending_revisions, read_meta
 
 
 @pytest.mark.parametrize(
@@ -150,3 +153,15 @@ def test_eval_accepts_json_or_run_directory(workspace, fake_gemini, capsys):
     for pred in (gold, run):
         assert main(["eval", "--gold", str(gold), "--pred", str(pred)]) == 0
         assert "Exakter Treffer: True" in capsys.readouterr().out
+
+
+def test_batch_model_option_routes_to_openai(workspace, fake_gemini, fake_openai):
+    assert main(["batch", "--model", "gpt-6.1-terra", "--photos", "private/source/a.jpg"]) == 0
+    assert len(fake_openai.prompts) == 1
+    assert fake_gemini.prompts == []
+    [run] = discover_runs(workspace / "private/output")
+    meta = read_meta(run)
+    assert meta["usage"]["model"] == meta["provenance"]["model"] == "gpt-6.1-terra"
+    assert meta["provenance"]["sdkVersion"] == version("openai")
+    expected = estimate_standard_cost_usd(TokenUsage(100, 20, 30, 150))
+    assert meta["usage"]["estimatedStandardCostUsd"] == format(expected, "f")

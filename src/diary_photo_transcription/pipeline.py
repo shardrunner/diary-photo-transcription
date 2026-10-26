@@ -11,9 +11,8 @@ from threading import Event
 from typing import Any
 from uuid import uuid4
 
-from diary_photo_transcription import gemini
+from diary_photo_transcription import gemini, openai_api
 from diary_photo_transcription.config import ProjectConfig, load_project_config
-from diary_photo_transcription.gemini import estimate_standard_cost_usd
 from diary_photo_transcription.normalize import review_targets
 from diary_photo_transcription.prompts import PROMPT_VERSION, refinement_prompt
 from diary_photo_transcription.provenance import config_fingerprint, extraction_run_id, sha256
@@ -64,8 +63,15 @@ def _usage(response: ModelResult, config: ProjectConfig) -> dict[str, Any]:
         "outputTokens": response.usage.output_tokens,
         "thinkingTokens": response.usage.thinking_tokens,
         "totalTokens": response.usage.total_tokens,
-        "estimatedStandardCostUsd": format(estimate_standard_cost_usd(response.usage), "f"),
+        "estimatedStandardCostUsd": format(
+            _adapter(config).estimate_standard_cost_usd(response.usage), "f"
+        ),
     }
+
+
+def _adapter(config: ProjectConfig) -> Any:
+    """The provider module; looked up at call time so tests can patch it."""
+    return openai_api if config.provider == "openai" else gemini
 
 
 def _display_path(photo: Path) -> str:
@@ -86,8 +92,9 @@ def _request_run(
     """Save the provider response first, then validate, render and publish atomically."""
     staging.mkdir(parents=True)
     try:
-        response = gemini.request_observation(
-            gemini.create_client(),
+        adapter = _adapter(config)
+        response = adapter.request_observation(
+            adapter.create_client(),
             model=config.model,
             photo=photo,
             prompt=prompt,

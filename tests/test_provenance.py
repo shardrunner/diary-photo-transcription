@@ -27,9 +27,13 @@ def test_output_relevant_settings_change_the_run_identity(changed: ProjectConfig
     assert extraction_run_id("b" * 64, base) != extraction_run_id(photo, base)
 
 
-def test_fingerprint_ignores_vault_destination_and_sdk_version() -> None:
+def test_fingerprint_ignores_vault_destination_and_sdk_version(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     base = config_fingerprint(ProjectConfig())
-    assert config_fingerprint(ProjectConfig(sdk_version="synthetic-sdk")) == base
+    monkeypatch.setattr("diary_photo_transcription.config.version", lambda _: "synthetic-sdk")
+    assert ProjectConfig().sdk_version == "synthetic-sdk"
+    assert config_fingerprint(ProjectConfig()) == base
     assert config_fingerprint(ProjectConfig(local=LocalConfig(vault_dir="elsewhere"))) == base
     assert config_fingerprint(ProjectConfig(local=LocalConfig(context="vocabulary"))) != base
     assert config_fingerprint(ProjectConfig(local=LocalConfig(default_corpus_year=2025))) != base

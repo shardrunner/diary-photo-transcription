@@ -7,6 +7,8 @@ from datetime import date
 from importlib.metadata import version
 from pathlib import Path
 
+from diary_photo_transcription.config import DEFAULT_MODEL, MODELS
+
 OUTPUT_DIR = Path("private/output")
 SOURCE_DIR = Path("private/source")
 
@@ -33,12 +35,12 @@ def _add_request_args(parser: argparse.ArgumentParser) -> None:
         "--media-resolution",
         choices=("high", "ultra_high"),
         default="high",
-        help="Gemini image processing resolution",
+        help="image resolution (OpenAI: high or original detail)",
     )
     parser.add_argument(
         "--thinking-level",
         choices=("low", "medium", "high"),
-        help="explicit Gemini thinking level; the model default is used when omitted",
+        help="thinking level / reasoning effort; the model default is used when omitted",
     )
 
 
@@ -57,6 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
     source.add_argument("--source-dir", type=Path, default=SOURCE_DIR)
     batch.add_argument("--concurrency", type=_positive_int, default=4)
     batch.add_argument("--force", action="store_true", help="new paid runs even if they exist")
+    batch.add_argument("--model", choices=tuple(MODELS), default=DEFAULT_MODEL)
     _add_request_args(batch)
 
     review = subparsers.add_parser("review", help="list runs with review issues")

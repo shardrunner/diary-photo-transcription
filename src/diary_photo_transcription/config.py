@@ -40,6 +40,9 @@ def load_project_config(path: Path | None = None, **kwargs: Any) -> ProjectConfi
 
 ThinkingLevel = Literal["low", "medium", "high"]
 MediaResolution = Literal["high", "ultra_high"]
+Provider = Literal["gemini", "openai"]
+MODELS: dict[str, Provider] = {"gemini-3.8-flash": "gemini", "gpt-6.1-terra": "openai"}
+DEFAULT_MODEL = "gemini-3.8-flash"
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,10 +50,19 @@ class ProjectConfig:
     """Project configuration."""
 
     local: LocalConfig = field(default_factory=LocalConfig)
-    model: str = "gemini-3.8-flash"
+    model: str = DEFAULT_MODEL
     thinking_level: ThinkingLevel | None = None
     media_resolution: MediaResolution = "high"
-    sdk_version: str = version("google-genai")
+
+    @property
+    def provider(self) -> Provider:
+        if self.model not in MODELS:
+            raise ValueError(f"Unsupported model {self.model!r}; choose one of {', '.join(MODELS)}")
+        return MODELS[self.model]
+
+    @property
+    def sdk_version(self) -> str:
+        return version("openai" if self.provider == "openai" else "google-genai")
 
     @property
     def effective_prompt(self) -> str:

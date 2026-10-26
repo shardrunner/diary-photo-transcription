@@ -16,6 +16,8 @@ It does not establish live provider compatibility or transcription accuracy.
 | Component | Locked version |
 | --- | --- |
 | google-genai | 2.31.0 |
+| openai | 3.39.0 |
+| Claude Code CLI (external, optional) | 2.1.310 |
 | Pillow | 13.0.0 |
 | Pydantic | 2.14.1 |
 | python-dotenv | 1.2.4 |

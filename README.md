@@ -7,17 +7,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 An applied multimodal AI pipeline for source-faithful transcription of German diary
-photos into Obsidian daily notes. It combines Gemini structured output with strict
-domain validation, content-based provenance, deterministic Markdown rendering and
+photos into Obsidian daily notes. It combines multimodal structured output (Gemini
+or OpenAI) with strict domain validation, content-based provenance, deterministic Markdown rendering and
 human approval. It demonstrates the engineering around a model—not a claim that
 valid JSON is a correct transcription.
 
-**Tech stack:** Python ≥3.12 · Pydantic · google-genai (`gemini-3.8-flash`) · CLI ·
-filesystem artifacts. CLI and prompts are German because the diary is German.
+**Tech stack:** Python ≥3.12 · Pydantic · google-genai (`gemini-3.8-flash`) ·
+openai Responses API (`gpt-6.1-terra`) · CLI · filesystem artifacts. CLI and prompts are German because the diary is German.
 
 **Workflow:**
 
-1. Send a local JPEG and configured private context to the Gemini cloud API.
+1. Send a local JPEG and configured private context to the Gemini or OpenAI cloud API.
 2. Save the raw model observation, validate it, and render Markdown plus review issues.
 3. Review uncertainties; optional refinements require explicit approval or rejection.
 4. Manually choose a source when runs compete for the same date, then export to the
@@ -45,7 +45,7 @@ inference; self-comparison is a software check, **not a handwriting benchmark**.
 ```bash
 mkdir -p private/source
 cp examples/local-config.json private/local-config.json   # new installs only
-cp .env.example .env                                      # add a Paid-project GEMINI_API_KEY
+cp .env.example .env                                      # GEMINI_API_KEY and/or OPENAI_API_KEY
 ```
 
 `private/local-config.json` holds `context` (reading-aid vocabulary),
@@ -64,8 +64,10 @@ uv run diary-photo-transcription select --date 2040-01-02 --run RUN             
 uv run diary-photo-transcription export [--vault-dir DIR] [--force]
 ```
 
-`--thinking-level` and `--media-resolution` on `batch` are for paid
-comparisons; they change the run identity. Ctrl-C during `batch` drops queued photos;
+`--model`, `--thinking-level` and `--media-resolution` on `batch` are for paid
+comparisons; they change the run identity. `--thinking-level` maps to OpenAI
+reasoning effort, `--media-resolution high|ultra_high` to OpenAI image detail
+`high|original`. Prompt and strict JSON schema are identical for both providers. Ctrl-C during `batch` drops queued photos;
 requests already sent finish and are saved.
 
 ### Runs
@@ -109,6 +111,13 @@ winner and refuses to overwrite differing vault notes without `--force`.
   database, GUI or provider framework. See the [data model](docs/ai/data-model.md)
   and the [paper contract](docs/ai/papierlegende.md).
 
+**Model evaluation.** Gemini 3.8 Flash, GPT-6.1 Terra and Claude Sonnet 5.5 were
+benchmarked through the identical pipeline across thinking levels and image
+resolutions on accuracy, confident date errors, reliability, cost and latency
+([results and decision](docs/ai/model-evaluation.md)). Short version: Gemini is the
+most faithful transcriber, Terra the most reliable date reader at a third of the
+cost, Sonnet the fastest.
+
 Evaluation compares all entries in source order. Text CER sums per-entry edit
 distances over total reference characters; listed inserted passages are
 differences, not verified hallucinations. Meaningful quality numbers need
@@ -117,15 +126,15 @@ independently verified gold data ([notes](docs/ai/extraktionsoptimierung.md)).
 ## Privacy, costs and limitations
 
 **Local orchestration is not local inference.** Photos and configured context go
-to Google's cloud API with `store=false`, which is not a universal retention
-guarantee; check the Paid API data terms first. Uploads are EXIF-oriented and
+to Google's or OpenAI's cloud API with `store=false`, which is not a universal
+retention guarantee; check the provider's API data terms first. Uploads are EXIF-oriented and
 re-encoded without metadata. Run artifacts and error messages can contain
-diary text. The key is read from `GEMINI_API_KEY`
-only, and a nonempty `GOOGLE_GENAI_DEBUG` is refused because SDK wire logging
+diary text. Keys are read from `GEMINI_API_KEY` or
+`OPENAI_API_KEY` only, and a nonempty `GOOGLE_GENAI_DEBUG` is refused because SDK wire logging
 would record credentials and photos.
 
 Each HTTP attempt times out after 300 s (dense pages exceeded 120 s); the SDK
-retries 408/409/429/5xx up to twice. Logged costs estimate reported usage at the
+retries 408/409/429/5xx up to twice (both SDKs). Logged costs estimate reported usage at the
 configured rates, not billed cost; failed or timed-out requests may cost tokens
 without reporting usage. With `gemini-3.8-flash` and its default thinking, a page
 costs about $0.055 (thinking is ~70 % of that); `--thinking-level low` is the main

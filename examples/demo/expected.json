@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "photoOverview": {
+    "tags": [
+      "sparse_page"
+    ],
+    "note": "Fictional typeset software fixture."
+  },
+  "layout": {
+    "followsExpectedLayout": false,
+    "deviationNote": "Text-only synthetic page; no score row or form."
+  },
+  "entries": [
+    {
+      "date": "2040-01-02",
+      "dateCertainty": "certain",
+      "fields": [],
+      "absentLabels": [
+        "Datum",
+        "Tagesmotto",
+        "VvV",
+        "Lernziel",
+        "Eat the Frog",
+        "Tagesfreude",
+        "Prios",
+        "Fun",
+        "Stören",
+        "Schön",
+        "dankbar",
+        "ToDos",
+        "Tageserlebnis",
+        "Pro",
+        "Cons",
+        "SelbstV",
+        "SG",
+        "LFT",
+        "Neu",
+        "Mot",
+        "TIL",
+        "BT",
+        "+",
+        "TR"
+      ],
+      "scores": [],
+      "paragraphs": [
+        "Heute habe ich ein Papiermodell gebaut.",
+        "Morgen folgt ein ⟦unleserlich⟧."
+      ],
+      "crossedOutCorrectionsOmitted": false,
+      "visualNotes": []
+    }
+  ],
+  "visualNotes": []
+}

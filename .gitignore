@@ -1,0 +1,36 @@
+# Python and tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.pyrefly/
+.prek/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Local diary data and generated artifacts
+private/
+
+# Legacy private data outside the Daily flow
+tagebuch/
+
+tests/gold/
+tests/fixtures/private/
+
+# Temporary image crops and editor/OS files
+.tmp/
+tmp/
+*.swp
+.DS_Store

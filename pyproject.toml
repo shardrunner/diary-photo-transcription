@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "diary-photo-transcription"
+version = "0.1.0"
+description = "Source-faithful transcription of diary photos into Obsidian daily notes"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "Michael Brunner" }]
+keywords = ["tagebuch", "transcription", "gemini", "pydantic", "cli"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: German",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "google-genai==2.31.0",
+  "pillow>=13,<14",
+  "pydantic>=2.12,<3",
+  "python-dotenv>=1,<2",
+  "pyyaml>=6.0.2,<7",
+]
+
+[project.urls]
+Repository = "https://github.com/shardrunner/diary-photo-transcription"
+Homepage = "https://github.com/shardrunner/diary-photo-transcription"
+
+[project.scripts]
+diary-photo-transcription = "diary_photo_transcription.cli:main"
+
+[dependency-groups]
+dev = [
+  "detect-secrets==1.5.0",
+  "prek",
+  "pyrefly",
+  "pytest",
+  "ruff",
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pyrefly]
+project-includes = ["src", "tests"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/diary_photo_transcription"]
